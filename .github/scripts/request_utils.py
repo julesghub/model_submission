@@ -20,9 +20,9 @@ session = requests.Session()
 
 
 # Configure retries
-max_retries = 3  # Set the maximum number of retries
+MAX_RETRIES = 3  # Maximum number of retries
 retry_strategy = Retry(
-    total=max_retries,
+    total=MAX_RETRIES,
     status_forcelist=[429, 500, 502, 503, 504],  # Specify which status codes to retry on
     allowed_methods=["HEAD", "GET", "OPTIONS"],  # Use `allowed_methods` for urllib3 v1.26.0 or later
     backoff_factor=1  # Defines the delay between retries
@@ -32,6 +32,24 @@ session.mount("http://", adapter)
 session.mount("https://", adapter)
 
 def get_record(record_type, record_id):
+    """Fetch a metadata record from one of the configured base URLs.
+
+    Tries both ``application/ld+json`` and ``application/json`` content types in order,
+    returning on the first successful response that contains content.
+
+    Args:
+        record_type (str): One of ``'publication'``, ``'software'``, ``'organization'``,
+            or ``'author'``.
+        record_id (str): The identifier to append to the base URL.
+
+    Returns:
+        tuple: A ``(metadata, log)`` tuple where *metadata* is the parsed JSON dict
+        (empty dict on failure) and *log* accumulates any error messages.
+
+    Raises:
+        ValueError: If *record_type* is not one of the supported types.
+    """
+
     log = ""
     metadata = {}
 
@@ -68,6 +86,16 @@ def get_record(record_type, record_id):
 
 
 def search_organization(org_url):
+    """Search the ROR API for an organisation matching the given URL and return its ROR ID.
+
+    Args:
+        org_url (str): The organisation's website URL or ROR URL.
+
+    Returns:
+        tuple: A ``(ror_id, log)`` tuple where *ror_id* is the matched ROR identifier
+        (empty string if not found) and *log* accumulates informational messages and
+        warnings.
+    """
     log = ""
     ror_id = ""
     result = {}
@@ -75,8 +103,8 @@ def search_organization(org_url):
     base_url = "https://api.ror.org/organizations"
     org_url = org_url.split("://")[-1]
 
-    #Check if last character is a '/' and if so drop it
-    if org_url[-1] == "/": org_url = org_url[:-1]
+    # Remove trailing slash if present
+    org_url = org_url.rstrip("/")
 
     url = base_url + '?query.advanced=links:' + org_url
     headers = {"Content-Type": "application/json"}
@@ -109,6 +137,15 @@ def search_organization(org_url):
 
 
 def check_uri(uri):
+    """Check whether a URI is reachable by making a GET request.
+
+    Args:
+        uri (str): The URI to check.
+
+    Returns:
+        str: ``'OK'`` if the request succeeded, otherwise a string representation of
+        the exception that was raised.
+    """
     try:
         response = requests.get(uri)
         response.raise_for_status()  # Raise an exception for HTTP errors
@@ -116,12 +153,19 @@ def check_uri(uri):
         return "OK"
 
     except Exception as err:
-        #return err.args[0]
         return str(err)  # 01/05/24: Convert the error to a string to avoid TypeError when we concatenate to log
 
 
-
 def download_license_text(url):
+    """Download the plain-text content of a license from *url*.
+
+    Args:
+        url (str): The URL of the license text file.
+
+    Returns:
+        str: The license text on success, or a fallback message instructing the reader
+        to consult the metadata file.
+    """
     try:
         response = requests.get(url)
         if response.status_code == 200:

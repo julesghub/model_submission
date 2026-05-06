@@ -5,13 +5,25 @@ import filetype
 import subprocess
 from filetypes import Svg
 
-
-
-#from improved_request_utils import get_record, search_organization
 from request_utils import get_record, search_organization
 from parse_metadata_utils import parse_author, parse_organization
 
+
 def validate_slug(proposed_slug):
+    """Validate the proposed model slug and return a safe identifier.
+
+    Checks that the slug is in the format ``familyname-year-keyword`` where *year* is
+    a four-digit number, then verifies that a repository with the proposed name can
+    actually be created (via :func:`generate_identifier`).
+
+    Args:
+        proposed_slug (str): The slug string entered by the submitter.
+
+    Returns:
+        tuple: A ``(slug, error_log)`` tuple where *slug* is the validated (or
+        best-available) slug string and *error_log* accumulates any warnings or errors.
+    """
+
     error_log = ""
 
     try:
@@ -88,21 +100,27 @@ def parse_name_or_orcid(name_or_orcid):
 
 def parse_yes_no_choice(input):
     '''
-    input is assumed to be a string
+    Return True if the input string contains an 'x' (case-insensitive), False otherwise.
+
+    Args:
+        input (str): A string representing a yes/no checkbox value.
+
+    Returns:
+        bool: True if 'x' is present in the lowercased input, False otherwise.
     '''
-    if "x" in input.lower():
-        return True
-    else:
-        return False
+    return "x" in input.lower()
 
 def is_orcid_format(author):
+    """Check whether *author* is a bare ORCID identifier (without the URL prefix).
 
+    Args:
+        author (str): The string to test.
+
+    Returns:
+        bool: True if *author* matches the pattern ``XXXX-XXXX-XXXX-XXXX``, False otherwise.
+    """
     orcid_pattern = re.compile(r'\d{4}-\d{4}-\d{4}-\d{3}[0-9X]')
-
-    if orcid_pattern.fullmatch(author):
-        return True
-    else:
-        return False
+    return bool(orcid_pattern.fullmatch(author))
 
 
 def get_authors(author_list):
@@ -132,6 +150,23 @@ def get_authors(author_list):
 
 
 def get_funders(funder_list):
+    """Resolve a list of funder names or ROR URLs to schema.org Organization dicts.
+
+    For each entry in *funder_list*:
+
+    * If the entry contains ``ror.org``, the ROR ID is extracted and the ROR API is
+      queried to build a structured Organization record.
+    * Otherwise, the ROR API is searched by URL/name to obtain a ROR ID first.
+
+    Args:
+        funder_list (list[str]): A list of funder identifiers (ROR URLs, website URLs,
+            or plain organisation names).
+
+    Returns:
+        tuple: A ``(funders, log)`` tuple where *funders* is a list of Organisation dicts
+        and *log* is a string accumulating warnings or errors.
+    """
+
     log = ""
     funders = []
 

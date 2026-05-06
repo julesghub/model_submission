@@ -1,3 +1,5 @@
+"""Posts or updates a model report comment on the GitHub issue after parsing the issue body."""
+
 import os
 from github import Github, Auth
 from parse_issue import parse_issue
@@ -6,18 +8,15 @@ from crosswalks import dict_to_report
 # Environment variables
 token = os.environ.get("GITHUB_TOKEN")
 issue_number = int(os.environ.get("ISSUE_NUMBER"))
-if os.environ.get("COMMENT_ID"):
-    comment_id = int(os.environ.get("COMMENT_ID"))
-else:
-    comment_id = None
+comment_id = int(os.environ["COMMENT_ID"]) if os.environ.get("COMMENT_ID") else None
 
 # Get issue
 auth = Auth.Token(token)
 g = Github(auth=auth)
 repo = g.get_repo("ModelAtlasofTheEarth/model_submission")
-issue = repo.get_issue(number = issue_number)
+issue = repo.get_issue(number=issue_number)
 if comment_id:
-    comment = issue.get_comment(id = comment_id)
+    comment = issue.get_comment(id=comment_id)
 
 # Parse issue
 data, error_log = parse_issue(issue)

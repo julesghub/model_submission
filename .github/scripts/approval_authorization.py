@@ -1,3 +1,6 @@
+"""Checks if the user who triggered the workflow is a member of the model_reviewers team,
+and removes the 'model approved' label if they are not authorized."""
+
 import os
 from github import Github, Auth
 
@@ -22,7 +25,7 @@ if __name__ == "__main__":
 
     if not authorized:
         # Remove approved label because it isn't
-        issue = org.get_repo(repo_name).get_issue(number = issue_number)
+        issue = org.get_repo(repo_name).get_issue(number=issue_number)
         issue.remove_from_labels("model approved")
 
     print(authorized)

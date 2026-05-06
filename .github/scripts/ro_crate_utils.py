@@ -36,8 +36,8 @@ def recursively_filter_key(obj, entity_template):
     """
 
     if isinstance(obj, dict):
-        if '@type' in obj.keys():
-            if obj['@type'] in entity_template.keys():
+        if '@type' in obj:
+            if obj['@type'] in entity_template:
                 #these are the keys we want to filter on
                 type_keys = entity_template[obj['@type']]
                 [obj.pop(k) for k in list(obj.keys()) if k not in type_keys]
@@ -68,10 +68,7 @@ def check_for_id(json_dict):
     """
     Checks if the @id key exists in a json_dict (a Python dictionary)
     """
-    if '@id' in json_dict.keys():
-        return True
-    else:
-        return False
+    return '@id' in json_dict
 
 
 def top_level_id(crate):
@@ -113,20 +110,16 @@ def replace_blank_null_id(entity):
     """
     replace_string = get_random_string()
 
-    if 'uri' in entity.keys():
-        replace_string =entity['uri']
-    if 'url' in entity.keys():
-        replace_string =entity['url']
+    if 'uri' in entity:
+        replace_string = entity['uri']
+    if 'url' in entity:
+        replace_string = entity['url']
 
-    #print(entity)
-
-    #if not @id is no present or or is None, make new_id.
-    if '@id' not in entity.keys():
-        entity.update({'@id': replace_string })
-    if '@id' in entity.keys() is True and entity['@id'] is None:
-        entity.update({'@id': replace_string })
-
-    #return entity
+    # if @id is not present or is None, assign a new id.
+    if '@id' not in entity:
+        entity.update({'@id': replace_string})
+    if entity.get('@id') is None:
+        entity.update({'@id': replace_string})
 
 def search_replace_blank_node_ids(crate, graph_index):
 
@@ -149,8 +142,6 @@ def search_replace_blank_node_ids(crate, graph_index):
 
     #grab the entity out of the crate as a dictionary
     json_dict = crate['@graph'][graph_index]
-    #print(json_dict)
-    #print(json_dict.keys())
     for key in json_dict.keys():
         entity = json_dict[key]
         #print(entity)
@@ -362,7 +353,7 @@ def dict_to_ro_crate_mapping(crate, issue_dict,  mapping_list):
     #loop through the dictionaries in the mappign list
     #each provides a mapping between the issue_dict and a particular entitity in the R0-crate
     for i, mapping in enumerate(mapping_list):
-        if '@id' in mapping.keys():
+        if '@id' in mapping:
             #get the value corresponding to the @id key
             entity_val = mapping['@id']
             #now search the correspoding entity by looping through the entities in the RO-Crate @graph array
