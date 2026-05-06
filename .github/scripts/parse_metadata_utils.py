@@ -113,7 +113,6 @@ def parse_software(metadata, doi):
     else:
         software_record["@type"] = "SoftwareApplication"
         software_record["@id"] = doi
-        author_list = []
         found_something = False
         if "title" in metadata:
             software_record["name"] = metadata["title"]
@@ -124,8 +123,8 @@ def parse_software(metadata, doi):
                 software_record["softwareVersion"] = metadata["metadata"]["version"]
                 found_something = True
 
+            author_list = []
             if "creators" in metadata["metadata"]:
-
                 for author in metadata["metadata"]["creators"]:
                     author_record = {"@type": "Person"}
                     if "orcid" in author:
