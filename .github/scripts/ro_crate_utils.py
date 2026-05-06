@@ -86,6 +86,15 @@ def top_level_id(crate):
     return id_list
 
 def is_array(var):
+    """
+    BY_AI: Returns True if the given variable is a list or tuple, False otherwise.
+
+    Parameters:
+        var: The variable to test.
+
+    Returns:
+        bool: True if var is an instance of list or tuple, False otherwise.
+    """
     return isinstance(var, (list, tuple))
 
 def replace_blank_null_id(entity):
@@ -542,6 +551,22 @@ def flatten_crate(crate):
 
 
 def find_index_by_id(ro_crate, id_value):
+    """
+    BY_AI: Finds and returns the index of an entity in an RO-Crate '@graph' array by its '@id'.
+
+    Searches the list of entity dictionaries stored under the '@graph' key of the
+    RO-Crate for the first dictionary whose '@id' matches 'id_value'.
+
+    Parameters:
+        ro_crate (dict): An RO-Crate object containing an '@graph' key with a list of
+            entity dictionaries.
+        id_value (str): The '@id' value to search for.
+
+    Returns:
+        int: The zero-based index of the matching entity within '@graph'.
+        str: An error or warning message string if the input is invalid, a dictionary
+            lacks an '@id' key, or no matching entity is found.
+    """
     list_of_dicts = ro_crate['@graph']
     # Check if the first parameter is a list
     if not isinstance(list_of_dicts, list):
@@ -598,6 +623,19 @@ def extract_project_description(owner, repo):
         return f"Failed to download README.md: HTTP {response.status_code}"
 
 def construct_full_url(base_url, identifier):
+    """
+    BY_AI: Constructs a full URL by inserting an identifier into a base URL template.
+
+    The base URL is expected to contain a single positional placeholder ('{}') which
+    will be replaced with the provided identifier string.
+
+    Parameters:
+        base_url (str): A URL template string containing one '{}' placeholder.
+        identifier (str): The value to insert into the placeholder position.
+
+    Returns:
+        str: The fully constructed URL with the identifier substituted in.
+    """
     # Insert the identifier into the base URL at the placeholder position
     full_url = base_url.format(identifier)
     return full_url

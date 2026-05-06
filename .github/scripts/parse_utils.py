@@ -12,6 +12,24 @@ from request_utils import get_record, search_organization
 from parse_metadata_utils import parse_author, parse_organization
 
 def validate_slug(proposed_slug):
+    """
+    BY_AI: Validates a proposed model repository slug and returns a confirmed usable slug.
+
+    Checks that the proposed slug follows the expected 'familyname-year-keyword' format
+    and that a GitHub repository with that name does not already exist. If the proposed
+    slug is unavailable, a modified (suffixed) slug is suggested instead.
+
+    Parameters:
+        proposed_slug (str): The slug string to validate, expected in the format
+            'familyname-year-keyword'.
+
+    Returns:
+        tuple:
+            slug (str): A valid, available repository slug (may differ from
+                proposed_slug if the proposed name is already taken).
+            error_log (str): A string containing any warnings or errors encountered
+                during validation.
+    """
     error_log = ""
 
     try:
@@ -96,6 +114,19 @@ def parse_yes_no_choice(input):
         return False
 
 def is_orcid_format(author):
+    """
+    BY_AI: Checks whether the given string is a bare ORCID iD (without a URL prefix).
+
+    Uses a regular expression to test if the entire string matches the ORCID pattern
+    of four groups of four digits separated by hyphens, with the last character being
+    a digit or 'X'.
+
+    Parameters:
+        author (str): The string to test.
+
+    Returns:
+        bool: True if the string is a bare ORCID iD, False otherwise.
+    """
 
     orcid_pattern = re.compile(r'\d{4}-\d{4}-\d{4}-\d{3}[0-9X]')
 
@@ -132,6 +163,25 @@ def get_authors(author_list):
 
 
 def get_funders(funder_list):
+    """
+    BY_AI: Resolves a list of funder identifiers into schema.org Organization dictionaries.
+
+    For each entry in funder_list, attempts to look up the organisation via the ROR API
+    (either directly, if a ROR URL is provided, or by searching with the given URL/name).
+    Falls back to constructing a minimal Organization record if a ROR record cannot be
+    found.
+
+    Parameters:
+        funder_list (list of str): A list of funder identifiers, which can be ROR URLs
+            (e.g. 'https://ror.org/...'), other URLs, or free-text organisation names.
+
+    Returns:
+        tuple:
+            funders (list of dict): A list of schema.org Organization dictionaries, each
+                containing at minimum '@type' and either '@id' or 'name'.
+            log (str): A string containing any warnings or errors encountered during
+                resolution.
+    """
     log = ""
     funders = []
 
@@ -170,6 +220,30 @@ def get_funders(funder_list):
 #Modification to deal with pdf better
 #original function above
 def parse_image_and_caption_old2(img_string, default_filename):
+    """
+    BY_AI: Parses an image URL and caption from a Markdown or HTML image string (legacy version).
+
+    Scans each line of the input string for a GitHub asset URL matching a known pattern.
+    Extracts the filename and URL using Markdown (`![alt](url)`) or HTML (`alt=... src=...`)
+    syntax. Lines that do not contain the URL pattern are collected as the caption.
+    Also attempts to determine the file extension from the HTTP Content-Type header for
+    image files.
+
+    Note: This is an older version of the function; prefer `parse_image_and_caption`
+    for new code.
+
+    Parameters:
+        img_string (str): A multi-line string containing a Markdown or HTML image link
+            and optional caption lines.
+        default_filename (str): The filename to use when only a bare URL is found (no
+            alt-text / filename is present in the link).
+
+    Returns:
+        tuple:
+            image_record (dict): A dictionary with keys 'filename', 'url', and 'caption'.
+            log (str): A string containing any warnings or errors encountered during
+                parsing.
+    """
     log = ""
     image_record = {}
 
@@ -224,6 +298,27 @@ def parse_image_and_caption_old2(img_string, default_filename):
 
 
 def parse_image_and_caption_old(img_string, default_filename):
+    """
+    BY_AI: Parses an image URL and caption from a Markdown or HTML image string (previous version).
+
+    An updated version of `parse_image_and_caption_old2` that extends URL pattern
+    matching to support both the old GitHub asset URL structure and the newer
+    user-attachments format. Lines not matching the URL pattern are collected as
+    caption text.
+
+    Note: This is a superseded version; prefer `parse_image_and_caption` for new code.
+
+    Parameters:
+        img_string (str): A multi-line string containing a Markdown or HTML image link
+            and optional caption lines.
+        default_filename (str): The filename to use when only a bare URL is found.
+
+    Returns:
+        tuple:
+            image_record (dict): A dictionary with keys 'filename', 'url', and 'caption'.
+            log (str): A string containing any warnings or errors encountered during
+                parsing.
+    """
     log = ""
     image_record = {}
 
@@ -280,6 +375,28 @@ def parse_image_and_caption_old(img_string, default_filename):
 url_cache = {}
 
 def parse_image_and_caption(img_string, default_filename):
+    """
+    BY_AI: Parses an image URL and caption from a Markdown image string (current version).
+
+    Scans each line of the input for a Markdown image link (`[filename](url)`) or a bare
+    GitHub asset URL. Remaining lines are joined to form the caption. The function also
+    makes an HTTP request to detect the file's MIME type and appends the correct extension
+    to the filename if needed. Results are cached to avoid redundant HTTP requests.
+
+    Image and animation filenames are prefixed with 'graphics/' unless already present.
+
+    Parameters:
+        img_string (str): A multi-line string containing a Markdown image link and
+            optional caption lines.
+        default_filename (str): The filename to use when only a bare URL is found without
+            alt-text.
+
+    Returns:
+        tuple:
+            image_record (dict): A dictionary with keys 'filename', 'url', and 'caption'.
+            log (str): A string containing any warnings or errors encountered during
+                parsing.
+    """
     log = ""
     image_record = {"filename": None, "url": "", "caption": ""}
 
@@ -350,6 +467,21 @@ def parse_image_and_caption(img_string, default_filename):
     return image_record, log
 
 def extract_doi_parts(doi_string):
+    """
+    BY_AI: Extracts a DOI from a string or URL and returns the cleaned DOI string.
+
+    Uses a regular expression to locate a DOI pattern (starting with '10.' followed by
+    a registry code and suffix) within the input. Trailing punctuation characters that are
+    not valid DOI components are stripped before returning.
+
+    Parameters:
+        doi_string (str): A string that may contain a DOI either as a bare identifier
+            or embedded within a URL (e.g. 'https://doi.org/10.1234/example').
+
+    Returns:
+        str: The extracted and cleaned DOI string, or 'No valid DOI found in the input
+            string.' if no DOI pattern is detected.
+    """
     # Regular expression to match a DOI within a string or URL
     # It looks for a string starting with '10.' followed by any non-whitespace characters
     # and optionally includes common URL prefixes
@@ -551,6 +683,20 @@ def process_funding_data(input_string):
     return {'funders': schema_funders, 'funding': schema_funding}
 
 def identify_separator(input_string):
+    """
+    BY_AI: Heuristically determines whether an input string uses commas or newlines as the primary separator.
+
+    Counts the total number of commas across all lines and compares that to the number of
+    newline characters. If there are more commas than newlines, the string is treated as
+    CSV; otherwise newline-separated is assumed.
+
+    Parameters:
+        input_string (str): The string to analyse.
+
+    Returns:
+        str: Either 'csv' if comma-separated values are detected, or 'newline' if
+            newline-separated values are detected.
+    """
     # Strip leading and trailing whitespace and split by newline to get lines
     lines = input_string.strip().split('\n')
 
@@ -565,6 +711,19 @@ def identify_separator(input_string):
         return 'newline'
 
 def separate_string(input_string):
+    """
+    BY_AI: Splits an input string into a list of trimmed tokens using the detected separator.
+
+    Calls `identify_separator` to determine whether the string uses commas or newlines
+    as delimiters, then splits and strips whitespace from each token accordingly. Empty
+    lines are discarded for newline-separated input.
+
+    Parameters:
+        input_string (str): The string to split.
+
+    Returns:
+        list of str: A list of trimmed, non-empty tokens parsed from the input string.
+    """
     separator_type = identify_separator(input_string)
 
     if separator_type == 'csv':

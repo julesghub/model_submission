@@ -1,4 +1,22 @@
 def parse_author(metadata):
+    """
+    BY_AI: Parses an author metadata record into a schema.org Person dictionary.
+
+    Accepts either a pre-formed JSON-LD record (containing '@type' and '@id') or a
+    raw ORCID API response. In the latter case, it extracts the person's name and any
+    current employment affiliations.
+
+    Parameters:
+        metadata (dict): A metadata record, either already in JSON-LD format or a raw
+            ORCID API response.
+
+    Returns:
+        tuple:
+            author_record (dict): A schema.org Person dictionary with keys such as
+                '@type', '@id', 'givenName', 'familyName', and optionally 'affiliation'.
+            log (str): A log string recording success messages or errors encountered
+                during parsing.
+    """
     log = ""
     author_record = {}
 
@@ -73,6 +91,26 @@ def parse_organization(record):
 
 
 def parse_software(metadata, doi):
+    """
+    BY_AI: Parses software metadata into a schema.org SoftwareApplication dictionary.
+
+    Accepts either a pre-formed JSON-LD record or raw metadata (e.g., from a Zenodo
+    DOI response). Falls back to constructing a SoftwareApplication entity from
+    available fields such as title, version, and creators.
+
+    Parameters:
+        metadata (dict): A metadata record, either already in JSON-LD format or a raw
+            API response containing software information.
+        doi (str): The DOI or URL used as the '@id' for the software entity when one
+            cannot be derived from the metadata itself.
+
+    Returns:
+        tuple:
+            software_record (dict): A schema.org SoftwareApplication dictionary with
+                keys such as '@type', '@id', 'name', 'softwareVersion', and 'author'.
+            log (str): A log string recording success messages or errors encountered
+                during parsing.
+    """
     log = ""
     software_record = {}
 
@@ -128,6 +166,25 @@ def parse_software(metadata, doi):
     return software_record, log
 
 def parse_publication(metadata):
+    """
+    BY_AI: Parses a Crossref API response into a schema.org ScholarlyArticle dictionary.
+
+    Accepts either a pre-formed JSON-LD record or a raw Crossref API response wrapped
+    in a 'message' key. Extracts bibliographic details including title, DOI, authors,
+    abstract, publication issue/volume information, funder details, and pagination.
+
+    Parameters:
+        metadata (dict): A Crossref API response dict containing a 'message' key, or
+            a pre-formed JSON-LD record with '@type' and '@id'.
+
+    Returns:
+        tuple:
+            publication_record (dict): A schema.org ScholarlyArticle dictionary with
+                keys such as '@type', '@id', 'name', 'author', 'abstract',
+                'isPartOf', and 'funder'.
+            log (str): A log string recording success messages or errors encountered
+                during parsing.
+    """
     log = ""
     publication_record = {}
 

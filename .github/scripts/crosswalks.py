@@ -309,6 +309,24 @@ def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list,
 
 def metadata_to_nci(ro_crate):
 
+    """
+    BY_AI: Converts an RO-Crate dictionary into an NCI/ISO metadata record as a pandas DataFrame.
+
+    Transforms the flat '@graph' array of the RO-Crate into a nested dictionary keyed by
+    entity ID, then extracts standard NCI metadata fields (title, abstract, license, field
+    of research codes, etc.) along with author and funder rows. The result is a two-column
+    DataFrame with 'Field' and 'Value' columns suitable for export as a CSV to the NCI
+    data catalogue.
+
+    Parameters:
+        ro_crate (dict): An RO-Crate JSON-LD object containing at minimum a '@graph' key
+            with a list of entity dictionaries, including a root entity ('@id': './').
+
+    Returns:
+        pandas.DataFrame: A DataFrame with columns ['Field', 'Value'] containing the NCI
+            metadata fields, author rows, and funder rows concatenated in order.
+    """
+
     #put the @graph array into a dictionary/nested format, where the @id field becomes the key
     ro_crate_nested = graph_to_nested_dict(ro_crate["@graph"])
     #extract funders and authors into a NCI/ISO format
