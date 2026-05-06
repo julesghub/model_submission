@@ -2,14 +2,10 @@ import os
 import re
 from github import Github, Auth
 from parse_issue import parse_issue
-#from crosswalks import dict_to_metadata, dict_to_yaml, dict_to_report, metadata_to_nci
 from crosswalks import dict_to_metadata, dict_to_report, metadata_to_nci
 from ro_crate_utils import replace_keys_recursive, assign_ids
-#from yaml_utils import format_yaml_string
 from request_utils import download_license_text
 from copy_files import copy_files
-#from ruamel.yaml import YAML
-import io
 from io import StringIO
 import json
 from datetime import datetime
@@ -24,7 +20,6 @@ model_owner = os.environ.get("OWNER")
 model_repo_name = os.environ.get("REPO")
 
 
-#get the time at which the function os ca
 current_utc_datetime = datetime.utcnow()
 timestamp = current_utc_datetime.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
@@ -33,7 +28,7 @@ timestamp = current_utc_datetime.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 auth = Auth.Token(token)
 g = Github(auth=auth)
 repo = g.get_repo("ModelAtlasofTheEarth/model_submission")
-issue = repo.get_issue(number = issue_number)
+issue = repo.get_issue(number=issue_number)
 
 # Get model repo
 model_repo = g.get_repo(f"{model_owner}/{model_repo_name}")
@@ -42,7 +37,7 @@ model_repo = g.get_repo(f"{model_owner}/{model_repo_name}")
 data, error_log = parse_issue(issue)
 
 # Convert dictionary to metadata json
-rocratestr_nested = dict_to_metadata(data, flat_compact_crate=False, timestamp= timestamp)
+rocratestr_nested = dict_to_metadata(data, flat_compact_crate=False, timestamp=timestamp)
 rocratedict = json.loads(rocratestr_nested)
 default_context_list = copy.deepcopy(rocratedict['@context'])
 #patch missign ids on Person Records
@@ -71,10 +66,10 @@ try:
     #add the @ back to type, id
     flatcompact = replace_keys_recursive(flatcompact)
 
-except:
+except Exception:
     #use the flattening routine we wrote
     #this is not necessary fully compacted (although we try to build compact records)
-    flatcompact = dict_to_metadata(data, flat_compact_crate=True, timestamp= timestamp)
+    flatcompact = dict_to_metadata(data, flat_compact_crate=True, timestamp=timestamp)
 
 
 #FOR TESTING - print out dictionary as a comment
@@ -98,7 +93,7 @@ model_repo.create_file(".metadata_trail/issue_dict.json","add issue_dict", issue
 
 try:
     license_url = str(data['license']['url'])
-except:
+except Exception:
     license_url = ''
 license_txt = download_license_text(license_url)
 model_repo.create_file("LICENSE","add license text", license_txt)
@@ -108,13 +103,13 @@ model_repo.create_file(".website_material/license.txt","add license text", licen
 #####Create the README.md
 
 pre_report = '# New [M@TE](https://mate.science/)! model: \n ' +  '_we have provided a summary of your model as a starting point for the README, feel free to edit_' + '\n'
-report = dict_to_report(data, verbose = True)
+report = dict_to_report(data, verbose=True)
 # Path to the README.md file
 file_path = 'README.md'
 # Retrieve the file to get its SHA and content
 file_contents = model_repo.get_contents(file_path)
 # Update the README.md file
-update_info = model_repo.update_file(
+model_repo.update_file(
     path=file_path,  # Path to the file in the repository
     message='Updated the README.md',  # Commit message
     content=pre_report + report,  # New content for the file
@@ -139,7 +134,7 @@ existing_content = file_contents.decoded_content.decode()
 updated_content = existing_content + '\n' + pre_notes + notes
 
 # Update the README.md file with the combined content
-update_info = model_repo.update_file(
+model_repo.update_file(
     path=file_path,
     message='Updated the README.md',
     content=updated_content,
@@ -165,7 +160,7 @@ existing_content = file_contents.decoded_content.decode()
 updated_content = existing_content + '\n' + pre_notes + notes
 
 # Update the README.md file with the combined content
-update_info = model_repo.update_file(
+model_repo.update_file(
     path=file_path,
     message='Updated the README.md',
     content=updated_content,
@@ -185,7 +180,15 @@ keywords += sciencekeywords + softwarekeywords
 
 #ensure keywords have valid format
 def sanitize_string(s):
-    return re.sub(r'[^a-z0-9-]','-', s)
+    """Replace any character that is not a lowercase letter, digit, or hyphen with a hyphen.
+
+    Args:
+        s (str): The input string to sanitise.
+
+    Returns:
+        str: The sanitised string safe for use as a GitHub repository topic.
+    """
+    return re.sub(r'[^a-z0-9-]', '-', s)
 
 keywords = [sanitize_string(item[:50].lower()) for item in keywords]
 

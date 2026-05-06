@@ -1,22 +1,54 @@
+"""Utilities for working with NCI/ISO metadata structures derived from RO-Crate documents."""
+
+
 class NestedDict(dict):
+    """A dict subclass that supports dot-notation access to nested values via :meth:`get_nested`."""
+
     def get_nested(self, keys):
+        """Return a nested value by following a dot-separated sequence of keys.
+
+        Args:
+            keys (str): A dot-separated string of keys (e.g. ``"root.creator.name"``).
+
+        Returns:
+            The value found at the end of the key path, or ``{}`` if any key is missing.
+        """
         current = self
         for key in keys.split('.'):
             current = current.get(key, {})
         return current
 
+
 def graph_to_nested_dict(graph):
+    """Convert an RO-Crate ``@graph`` list into a :class:`NestedDict` keyed by ``@id``.
+
+    The root entity (``@id == './'``) is stored under the key ``'root'``.
+
+    Args:
+        graph (list): The ``@graph`` array from an RO-Crate dictionary.
+
+    Returns:
+        NestedDict: A mapping from entity ``@id`` (or ``'root'``) to entity dict.
+    """
     nested_dict = NestedDict()
     for item in graph:
         key = 'root' if item["@id"] == './' else item["@id"]
         nested_dict[key] = item
     return nested_dict
 
+
 def list_to_string(value):
+    """Convert a list to a comma-separated string, or return the value unchanged if not a list.
+
+    Args:
+        value: The value to convert.
+
+    Returns:
+        str: A comma-separated string if *value* is a list, otherwise *value* as-is.
+    """
     if isinstance(value, list):
         return ', '.join(value)
     return value
-
 
 
 def extract_creator_details(ro_crate_nested):

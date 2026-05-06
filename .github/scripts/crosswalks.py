@@ -8,7 +8,7 @@ from config import MATE_GADI
 
 
 
-def dict_to_report(issue_dict, verbose = False):
+def dict_to_report(issue_dict, verbose=False):
 
     """
     Generates a detailed report in Markdown format based on the provided issue dictionary.The function supports a verbose mode that includes additional details such as software framework authors and a dictionary dump for testing purposes.
@@ -95,7 +95,7 @@ def dict_to_report(issue_dict, verbose = False):
     # funder
     report += "**Funder(s):**  \n"
     for funder in issue_dict["funder"]:
-        if 'name' in funder.keys():
+        if 'name' in funder:
             report += f"- {funder['name']} "
             if "@id" in funder:
                 report += f"({funder['@id']})"
@@ -170,7 +170,7 @@ def dict_to_report(issue_dict, verbose = False):
         report += "**Name of primary software framework:**  \n\n"
         report += f"{issue_dict['software']['name']} \n\n"
 
-    if verbose is True:
+    if verbose:
         #software framework authors
         if "author" in issue_dict["software"]:
             report += "**Software framework authors:**  \n"
@@ -245,7 +245,7 @@ def dict_to_report(issue_dict, verbose = False):
     return report
 
 
-def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list, filter_entities=True, flat_compact_crate=True, timestamp = False):
+def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list, filter_entities=True, flat_compact_crate=True, timestamp=False):
 
     """
     Converts an issue dictionary into a standardized metadata format using Research Object Crate (RO-Crate) structure,
@@ -277,13 +277,11 @@ def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list,
 
     #this takes the issue_dict and simplifies entities (e.g. @Type=Person) using templates defined at:
     #https://github.com/ModelAtlasofTheEarth/metadata_schema/blob/main/mate_ro_crate/type_templates.json
-    if filter_entities is True:
+    if filter_entities:
         entity_template = load_entity_template()
         recursively_filter_key(issue_dict_copy, entity_template)
 
     #load the RO-Crate template as a Python dictionary
-    #$print(ro_crate.keys())
-    #>>>dict_keys(['@context', '@graph'])
     ro_crate = load_crate_template()
 
     #Apply direct mappings between the issue_dict and the RO-Crate
@@ -294,7 +292,7 @@ def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list,
 
 
     #flatten the crate (brings nested entities to the top level)
-    if flat_compact_crate is True:
+    if flat_compact_crate:
         flatten_crate(ro_crate)
         # flatten a document
         # see: https://json-ld.org/spec/latest/json-ld/#flattened-document-form
@@ -308,8 +306,18 @@ def dict_to_metadata(issue_dict, mapping_list=default_issue_entity_mapping_list,
 
 
 def metadata_to_nci(ro_crate):
+    """Convert an RO-Crate dictionary to a pandas DataFrame in NCI/ISO metadata format.
 
-    #put the @graph array into a dictionary/nested format, where the @id field becomes the key
+    Extracts key metadata fields (title, abstract, authors, funders, etc.) from the
+    RO-Crate's ``@graph`` array and returns a DataFrame suitable for NCI ISO records.
+
+    Args:
+        ro_crate (dict): An RO-Crate dictionary containing at least a ``@graph`` key.
+
+    Returns:
+        pandas.DataFrame: A DataFrame with 'Field' and 'Value' columns representing the
+        NCI ISO metadata record, including author and funder rows.
+    """
     ro_crate_nested = graph_to_nested_dict(ro_crate["@graph"])
     #extract funders and authors into a NCI/ISO format
     funders = extract_funder_details(ro_crate_nested)
@@ -340,16 +348,7 @@ def metadata_to_nci(ro_crate):
         "Keyword/s": list_to_string(ro_crate_nested.get_nested(f"{root}.keywords"))
     }
 
-    fields_df = pd.DataFrame(list(fields_data.items()), columns=["Field", "Value"])
-
-    #update specific fields that need tailoring
-    #ro_crate_data['@graph'][1]['alternateName']
-
-    #fields_df
-    #nci_file_path = ro_crate_nested.get_nested(f"{root}.alternateName")
-    #"Local NCI file path": "",
-
-
+    fields_df = pd.DataFrame(fields_data.items(), columns=["Field", "Value"])
 
     # Handling authors as before
     authors_rows = [

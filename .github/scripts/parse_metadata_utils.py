@@ -1,8 +1,21 @@
 def parse_author(metadata):
+    """Parse an ORCID or raw author metadata record into a schema.org Person dict.
+
+    If *metadata* already contains ``@type`` and ``@id`` keys it is returned as-is.
+    Otherwise the function attempts to build a Person record from the raw ORCID API
+    JSON structure.
+
+    Args:
+        metadata (dict): An ORCID API JSON record or an already-parsed json-ld Person dict.
+
+    Returns:
+        tuple: A ``(author_record, log)`` tuple where *author_record* is a dict and
+        *log* is a string describing any warnings or errors.
+    """
     log = ""
     author_record = {}
 
-    if "@type" and "@id" in metadata.keys():
+    if "@type" in metadata and "@id" in metadata:
         author_record = metadata
         log += "ORCID metadata record succesfully extracted in json-ld format \n"
 
@@ -73,34 +86,45 @@ def parse_organization(record):
 
 
 def parse_software(metadata, doi):
+    """Parse a DOI metadata record into a schema.org SoftwareApplication dict.
+
+    If *metadata* already contains ``@type`` and ``@id`` keys it is returned as-is.
+    Otherwise the function attempts to build a SoftwareApplication record from the
+    raw Zenodo/DataCite JSON structure.
+
+    Args:
+        metadata (dict): A DOI metadata record or an already-parsed json-ld dict.
+        doi (str): The DOI/URL to use as the ``@id`` when building a new record.
+
+    Returns:
+        tuple: A ``(software_record, log)`` tuple where *software_record* is a dict
+        and *log* is a string describing any warnings or errors.
+    """
     log = ""
     software_record = {}
 
-    #here we check if software metdata was found in json-ld
-    #if so, we simply return the record
-    if "@type" and "@id" in metadata.keys():
+    # here we check if software metadata was found in json-ld
+    # if so, we simply return the record
+    if "@type" in metadata and "@id" in metadata:
         software_record = metadata
         log += "doi.org metadata record succesfully extracted in json-ld format \n"
 
-    #if not, we'll try to a schema.org entity from the json
+    # if not, we'll try to build a schema.org entity from the json
     else:
         software_record["@type"] = "SoftwareApplication"
         software_record["@id"] = doi
-        #try:
         found_something = False
-        if "title" in metadata.keys():
+        if "title" in metadata:
             software_record["name"] = metadata["title"]
             print('found title')
             found_something = True
-        if "metadata" in metadata.keys():
-            if "version" in metadata["metadata"].keys():
+        if "metadata" in metadata:
+            if "version" in metadata["metadata"]:
                 software_record["softwareVersion"] = metadata["metadata"]["version"]
                 found_something = True
 
-            if "creators" in metadata["metadata"].keys():
-
-                author_list = []
-
+            author_list = []
+            if "creators" in metadata["metadata"]:
                 for author in metadata["metadata"]["creators"]:
                     author_record = {"@type": "Person"}
                     if "orcid" in author:
@@ -120,20 +144,31 @@ def parse_software(metadata, doi):
                 software_record["author"] = author_list
 
 
-        #except Exception as err
-        if found_something is False:
+        if not found_something:
             log += "Error: unable to parse software metadata. \n"
-            #log += f"`{err}`\n"
 
     return software_record, log
 
 def parse_publication(metadata):
+    """Parse a Crossref API metadata record into a schema.org ScholarlyArticle dict.
+
+    If *metadata['message']* already contains ``@type`` and ``@id`` keys it is returned
+    as-is. Otherwise the function attempts to build a ScholarlyArticle record from the
+    raw Crossref JSON structure.
+
+    Args:
+        metadata (dict): The full Crossref API response containing a ``'message'`` key.
+
+    Returns:
+        tuple: A ``(publication_record, log)`` tuple where *publication_record* is a dict
+        and *log* is a string describing any warnings or errors.
+    """
     log = ""
     publication_record = {}
 
     metadata = metadata['message']
 
-    if "@type" and "@id" in metadata.keys():
+    if "@type" in metadata and "@id" in metadata:
         publication_record = metadata
         log += "Crossref metadata record succesfully extracted in json-ld format \n"
     else:

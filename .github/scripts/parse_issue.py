@@ -41,10 +41,7 @@ def null_response_check(string):
     bool: True if the input string is "_No response_" or an empty string, indicating a null response.
           False otherwise.
     """
-    result = False
-    if string == "_No response_" or string == "":
-        result = True
-    return result
+    return string in ("_No response_", "")
 
 
 def parse_issue(issue):
