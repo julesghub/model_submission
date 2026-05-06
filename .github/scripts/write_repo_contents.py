@@ -185,6 +185,18 @@ keywords += sciencekeywords + softwarekeywords
 
 #ensure keywords have valid format
 def sanitize_string(s):
+    """
+    BY_AI: Replaces any character that is not a lowercase letter, digit, or hyphen with a hyphen.
+
+    Used to ensure that repository topic strings conform to GitHub's topic naming rules,
+    which only allow lowercase alphanumeric characters and hyphens.
+
+    Parameters:
+        s (str): The input string to sanitize.
+
+    Returns:
+        str: The sanitized string with invalid characters replaced by '-'.
+    """
     return re.sub(r'[^a-z0-9-]','-', s)
 
 keywords = [sanitize_string(item[:50].lower()) for item in keywords]

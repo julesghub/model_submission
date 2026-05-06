@@ -11,6 +11,26 @@ from github.GithubException import UnknownObjectException
 
 
 def copy_files(repo, directory, issue_dict):
+    """
+    BY_AI: Copies web-material files referenced in an issue dictionary to a GitHub repository.
+
+    Iterates over a fixed set of file keys ('landing_image', 'animation',
+    'graphic_abstract', 'model_setup_figure'). For each key present in issue_dict with a
+    non-empty URL, the file is downloaded via HTTP and uploaded to the specified directory
+    in the target repository. Files that already exist in the repository are silently
+    skipped.
+
+    Parameters:
+        repo (github.Repository.Repository): A PyGithub Repository object representing
+            the target GitHub repository.
+        directory (str): The directory path within the repository where files should be
+            placed (e.g. '.website_material/').
+        issue_dict (dict): A dictionary containing metadata about the model, including
+            optional image/animation records with 'url' and 'filename' keys.
+
+    Returns:
+        None
+    """
     file_keys = ["landing_image", "animation", "graphic_abstract", "model_setup_figure"]
 
     for file_key in file_keys:
