@@ -61,7 +61,7 @@ def extract_creator_details(ro_crate_nested):
     """
     BY_AI: Extracts a list of creator detail dictionaries from a nested RO-Crate dictionary.
 
-    Reads the 'creator' list from the root entity and builds a standardised detail record
+    Reads the 'creator' list from the root entity and builds a standardized detail record
     for each creator, falling back to 'Unknown' for any missing fields.
 
     Parameters:

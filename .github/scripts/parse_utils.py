@@ -691,7 +691,7 @@ def identify_separator(input_string):
     CSV; otherwise newline-separated is assumed.
 
     Parameters:
-        input_string (str): The string to analyse.
+        input_string (str): The string to analyze.
 
     Returns:
         str: Either 'csv' if comma-separated values are detected, or 'newline' if
@@ -717,6 +717,8 @@ def separate_string(input_string):
     Calls `identify_separator` to determine whether the string uses commas or newlines
     as delimiters, then splits and strips whitespace from each token accordingly. Empty
     lines are discarded for newline-separated input.
+
+    
 
     Parameters:
         input_string (str): The string to split.

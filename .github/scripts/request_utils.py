@@ -91,7 +91,7 @@ def get_record(record_type, record_id):
 
 def search_organization(org_url):
     """
-    BY_AI: Searches the ROR API for an organisation matching the given URL and returns its ROR ID.
+    BY_AI: Searches the ROR API for an organization matching the given URL and returns its ROR ID.
 
     Strips the URL scheme and any trailing slash before querying
     'https://api.ror.org/organizations?query.advanced=links:<org_url>'. If exactly one
@@ -99,7 +99,7 @@ def search_organization(org_url):
     used and a warning is logged.
 
     Parameters:
-        org_url (str): The organisation's homepage URL to search for.
+        org_url (str): The organization's homepage URL to search for.
 
     Returns:
         tuple:
